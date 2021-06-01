@@ -1,2 +1,2 @@
 # M6
- Strive -Module 6
+ Stive - Module 6
