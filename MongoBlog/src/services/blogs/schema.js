@@ -1,7 +1,13 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose"
 
-const { Schema, model } = mongoose;
-
+const { Schema, model } = mongoose
+const CommentSchema = new Schema({
+	elementId: String,
+	comment: String,
+	author: String,
+	rate: Number,
+	date: "",
+})
 const BlogSchema = new Schema(
 	{
 		category: {
@@ -16,18 +22,9 @@ const BlogSchema = new Schema(
 			type: String,
 			required: true,
 		},
-		comments: [
-			{
-				elementId: String,
-				comment: String,
-				author: String,
-				rate: Number,
-				date: "",
-			},
-		],
+		comments: {type:[CommentSchema], default:[]},
 	},
 	{ timestamps: true }
 )
 
-export default model('Blog', BlogSchema)
-
+export default model("Blog", BlogSchema)

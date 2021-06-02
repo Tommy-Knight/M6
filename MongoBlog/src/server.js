@@ -30,13 +30,16 @@ server.use(catchAllErrorHandler)
 
 console.table(listEndpoints(server))
 
+// ><><><><: MONGO TIME :><><><>< \\
+
 mongoose.connect(process.env.MONGO_CONNECTION, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
 	})
+
 const db = mongoose.connection
 db.on("error", (error) => console.log(error))
-db.once("open", () => console.log("Connected to MongoDB 🎯"))
+db.once("open", () => console.log("Connected to MongoDB 🌵"))
 
 .then(
 		server.listen(port, () => {
