@@ -26,13 +26,15 @@ const BlogSchema = new Schema(
 			required: true,
 		},
 		comments: { type: [CommentSchema], default: [] },
-		author: [{ type: Schema.Types.ObjectId, ref: "Author" }],
+		author: { type: Schema.Types.ObjectId, ref: "Author" },
 	},
 	{ timestamps: true }
 )
 
+
+
 BlogSchema.static("findBlog", async function (id) {
-	const blog = await this.findOne({ _id: id }).populate("comments").populate("author")
+	const blog = await this.findOne({ _id: id }).populate("comments")
 	console.log(blog)
 	return blog
 })
@@ -43,3 +45,19 @@ BlogSchema.static("GetComments", async function (id) {
 })
 
 export default model("Blog", BlogSchema)
+
+
+BlogSchema.pre("save", async function (done) {
+	try {
+		const isExist = await AuthorsSchema.findById(this.author)
+		if (isExist) {
+			done()
+		} else {
+			const error = new Error("this author does not exist")
+			error.status = 400
+			done(error)
+		}
+	} catch (error) {
+		done(error)
+	}
+})
