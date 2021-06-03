@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import AuthorsSchema from "../authors/schema.js"
 
 const { Schema, model } = mongoose
 
@@ -24,13 +25,14 @@ const BlogSchema = new Schema(
 			type: String,
 			required: true,
 		},
-		comments: {type:[CommentSchema], default:[]},
+		comments: { type: [CommentSchema], default: [] },
+		author: [{ type: Schema.Types.ObjectId, ref: "Author" }],
 	},
 	{ timestamps: true }
 )
 
 BlogSchema.static("findBlog", async function (id) {
-	const blog = await this.findOne({ _id: id }).populate("comments")
+	const blog = await this.findOne({ _id: id }).populate("comments","author")
 	console.log(blog)
 	return blog
 })

@@ -25,6 +25,7 @@ blogsRouter.get("/:id", async (req, res, next) => {
 		next(error)
 	}
 })
+//  <><><><> PREVIOUS CODE BEFORE USING FINDBLOG FROM SCHEMA <><><><>
 // 	try {
 // 		const id = req.params.id
 // 		const blog = await BlogModel.findById(id)

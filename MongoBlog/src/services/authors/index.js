@@ -1,46 +1,21 @@
 import express from "express"
 import createError from "http-errors"
-import uniqid from "uniqid"
 import multer from "multer"
-import {
-	getAuthors,
-	writeAuthors,
-	writeAuthorAvatars,
-	authorsReadStream,
-} from "../helpers/files.js"
-import { Transform } from "json2csv"
-import { pipeline } from "stream"
+import getAuthors from "./schema.js"
 
-const router = express.Router()
+const authorsRouter = express.Router()
 
-router.get("/exportCSV", async (req, res, next) => {
+authorsRouter.get("/", async (req, res, next) => {
 	try {
-		const source = await authorsReadStream()
-
-		const fields = ["name", "surname", "email"]
-		const opts = { fields }
-		const json2csv = new Transform(opts)
-
-		res.setHeader("Content-Disposition", `attachment; filename=authors.csv`)
-
-		pipeline(source, json2csv, res, (error) => {
-			if (error) next(error)
-		})
+		const authors = await getAuthors.find({})
+		res.send(authors)
 	} catch (error) {
-		next(error)
+		console.log(error)
+		next(createError(500, "An error occurred while getting authors"))
 	}
 })
 
-router.get("/", async (req, res) => {
-	;(await getAuthors().length) > 0
-		? res.send(authorsArray)
-		: res.send("No data.")
-	// const authors = await authorModel.find()
-
-	// res.send(authors)
-})
-
-router.get("/:id", async (req, res) => {
+authorsRouter.get("/:id", async (req, res) => {
 	const authors = await getAuthors()
 
 	const author = authors.find((author) => author._id === req.params.id)
@@ -50,27 +25,23 @@ router.get("/:id", async (req, res) => {
 		: res.send("Author does not exist, check your author ID")
 })
 
-router.post("/", async (req, res) => {
-	const authors = await getAuthors()
-
-	if (authors.find((author) => author.email === req.body.email)) {
-		res.send("email already in use, please try a different email.")
-	} else {
-		const author = req.body
-		author._id = uniqid()
-		author.createdOn = new Date()
-		authors.push(author)
-
-		await writeAuthors(authors)
-
-		res.send(author)
+authorsRouter.post("/", async (req, res, next) => {
+	try {
+		const newauthor = new getAuthors(req.body)
+		const { _id } = await newauthor.save()
+		console.log(newauthor)
+		res.status(201).send(_id)
+	} catch (error) {
+		console.log(error)
+		if (error.name === "ValidationError") {
+			next(createError(400, error))
+		} else {
+			next(createError(500, "An error occurred while saving blog"))
+		}
 	}
-	// const newAuthor = new authorModel(req.body)
-	// const id  = await newAuthor.save()
-	// res.send(id)
 })
 
-router.put("/:id", async (req, res) => {
+authorsRouter.put("/:id", async (req, res) => {
 	const authors = await getAuthors()
 	const newAuthorsArray = authors.filter(
 		(author) => author._id !== req.params.id
@@ -94,18 +65,21 @@ router.put("/:id", async (req, res) => {
 	res.send(updatedAuthor)
 })
 
-router.delete("/:id", async (req, res) => {
-	const authors = await getAuthors()
-	const newAuthorsArray = authors.filter(
-		(author) => author._id !== req.params.id
-	)
-
-	await writeAuthors(newAuthorsArray)
-
-	res.send("Author deleted successfully")
+authorsRouter.delete("/:id", async (req, res, next) => {
+	try {
+		const authors = await getAuthors.findByIdAndDelete(req.params.id)
+		if (authors) {
+			res.status(204).send()
+		} else {
+			next(createError(404, `Author ${req.params.id} not found`))
+		}
+	} catch (error) {
+		console.log(error)
+		next(createError(500, "An error occurred while deleting author"))
+	}
 })
 
-router.post(
+authorsRouter.post(
 	"/:id/uploadAvatar",
 	multer().single("authorAvatar"),
 	async (req, res, next) => {
@@ -135,4 +109,38 @@ router.post(
 	}
 )
 
-export default router
+export default authorsRouter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// authorsRouter.get("/exportCSV", async (req, res, next) => {
+// 	try {
+// 		const source = await authorsReadStream()
+
+// 		const fields = ["name", "surname", "email"]
+// 		const opts = { fields }
+// 		const json2csv = new Transform(opts)
+
+// 		res.setHeader("Content-Disposition", `attachment; filename=authors.csv`)
+
+// 		pipeline(source, json2csv, res, (error) => {
+// 			if (error) next(error)
+// 		})
+// 	} catch (error) {
+// 		next(error)
+// 	}
+// })
