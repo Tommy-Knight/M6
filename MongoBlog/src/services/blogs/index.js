@@ -16,18 +16,28 @@ blogsRouter.get("/", async (req, res, next) => {
 
 blogsRouter.get("/:id", async (req, res, next) => {
 	try {
-		const id = req.params.id
-		const blog = await BlogModel.findById(id)
-		if (blog) {
-			res.send(blog)
-		} else {
-			next(createError(404, `Blog ${req.params.id} not found`))
-		}
+		const blog = await blogModel.findBlog(req.params.id)
+
+		blog
+			? res.send(blog)
+			: next(createError(404, `Blog ${req.params.id} not found`))
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while getting blog"))
+		next(error)
 	}
 })
+// 	try {
+// 		const id = req.params.id
+// 		const blog = await BlogModel.findById(id)
+// 		if (blog) {
+// 			res.send(blog)
+// 		} else {
+// 			next(createError(404, `Blog ${req.params.id} not found`))
+// 		}
+// 	} catch (error) {
+// 		console.log(error)
+// 		next(createError(500, "An error occurred while getting blog"))
+// 	}
+// })
 
 blogsRouter.post("/", async (req, res, next) => {
 	try {

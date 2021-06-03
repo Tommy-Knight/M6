@@ -29,4 +29,15 @@ const BlogSchema = new Schema(
 	{ timestamps: true }
 )
 
+BlogSchema.static("findBlog", async function (id) {
+	const blog = await this.findOne({ _id: id }).populate("comments")
+	console.log(blog)
+	return blog
+})
+
+BlogSchema.static("GetComments", async function (id) {
+	const comments = await this.findById(id, { comments: 1 }).populate("comments")
+	return comments
+})
+
 export default model("Blog", BlogSchema)
