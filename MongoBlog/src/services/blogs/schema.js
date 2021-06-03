@@ -32,7 +32,7 @@ const BlogSchema = new Schema(
 )
 
 BlogSchema.static("findBlog", async function (id) {
-	const blog = await this.findOne({ _id: id }).populate("comments","author")
+	const blog = await this.findOne({ _id: id }).populate("comments").populate("author")
 	console.log(blog)
 	return blog
 })

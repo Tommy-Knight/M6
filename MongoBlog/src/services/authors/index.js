@@ -15,14 +15,16 @@ authorsRouter.get("/", async (req, res, next) => {
 	}
 })
 
-authorsRouter.get("/:id", async (req, res) => {
-	const authors = await getAuthors()
+authorsRouter.get("/:id", async (req, res, next) => {
+	try {
+		const author = await blogModel.getAuthors(req.params.id)
 
-	const author = authors.find((author) => author._id === req.params.id)
-
-	author
-		? res.send(author)
-		: res.send("Author does not exist, check your author ID")
+		author
+			? res.send(author)
+			: next(createError(404, `Author ${req.params.id} not found`))
+	} catch (error) {
+		next(error)
+	}
 })
 
 authorsRouter.post("/", async (req, res, next) => {
