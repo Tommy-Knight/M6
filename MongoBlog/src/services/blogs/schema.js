@@ -1,6 +1,7 @@
 import mongoose from "mongoose"
 
 const { Schema, model } = mongoose
+
 const CommentSchema = new Schema({
 	elementId: String,
 	comment: String,
@@ -8,6 +9,7 @@ const CommentSchema = new Schema({
 	rate: Number,
 	date: "",
 })
+
 const BlogSchema = new Schema(
 	{
 		category: {
