@@ -12,7 +12,7 @@ import {
 
 
 const server = express()
-const port = process.env.PORT
+const port = process.env.PORT || 3420
 
 // ><><><><: MIDDLEWARES :><><><>< \\
 
@@ -24,6 +24,7 @@ server.use(cors())
 
 server.use("/blogs", blogsRouter)
 server.use("/authors", authorsRouter)
+
 // ><><><><: ERROR MIDDLEWARES :><><><>< \\
 
 server.use(badRequestErrorHandler)
