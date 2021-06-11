@@ -1,66 +1,61 @@
-import { Router } from "express"
+const express = require("express")
+const Cart = require("../../db").Cart
+const Product = require("../../db").Product
+const User = require("../../db").User
+const Category = require("../../db").Category
+const { Sequelize } = require("../../db").sequelize
+const router = express.Router()
 
-import query from "../../utils/db/index.js"
-
-const route = Router()
-
-route.get("/", async (req, res, next) => {
+router.route("/:userId").get(async (req, res, next) => {
 	try {
-		const dbResponse = await query(
-			"SELECT * FROM authors ORDER BY created_at DESC"
-		)
-		res.send(dbResponse)
-	} catch (error) {
-		res.status(500).send({ error })
+		// select  "productId", p.id,  p.name, p.price, "categoryId", count("productId") as unitaryPrice
+		// from carts as c
+		// inner join products as p
+		// on c."productId"=p.id
+		// group by "productId", p.id
+		const cart = await Cart.findAll({
+			attributes: [
+				"productId",
+
+				[Sequelize.fn("COUNT", Sequelize.col("productId")), "unitaryQty"],
+				[Sequelize.fn("SUM", Sequelize.col("product.price")), "unitaryPrice"],
+			],
+			group: ["productId", "product.id", "user.id", "product->category.id"],
+			include: [{ model: Product, include: Category }, User],
+		})
+
+		const totalQty = await Cart.count({ where: { userId: req.params.userId } })
+
+		const totalPrice = await Cart.sum("product.price", {
+			where: { userId: req.params.userId },
+			include: { model: Product, attributes: [] },
+		})
+		res.send({ cart, totalPrice, totalQty })
+	} catch (e) {
+		console.log(e)
+		next(e)
 	}
 })
+router
+	.route("/:userId/:productId")
+	.post(async (req, res, next) => {
+		try {
+			const rawCart = await Cart.create({
+				productId: req.params.productId,
+				userId: req.params.userId,
+			})
+			res.send(rawCart)
+		} catch (e) {
+			console.log(e)
+			next(e)
+		}
+	})
+	.delete(async (req, res, next) => {
+		try {
+		} catch (e) {
+			console.log(e)
+			next(e)
+		}
+	})
 
-route.get("/:id", async (req, res, next) => {
-	try {
-		const dbResponse = await query(
-			`SELECT * FROM authors WHERE id=${req.params.id}`
-		)
-		res
-			.status(dbResponse ? 200 : 404)
-			.send(dbResponse ? dbResponse : { error: "blog not found" })
-	} catch (error) {
-		res.status(500).send({ error })
-	}
-})
-
-route.put("/:id", async (req, res, next) => {
-	try {
-		const { name, surname, avatar } = req.body
-		const dbResponse = await query(
-			`UPDATE authors SET name='${name}',surname='${surname}', avatar='${avatar}' WHERE id=${req.params.id} RETURNING *`
-		)
-		res.send(dbResponse)
-	} catch (error) {
-		res.status(500).send({ error })
-	}
-})
-
-route.post("/", async (req, res, next) => {
-	try {
-		const { name, surname, avatar } = req.body
-		const dbResponse = await query(
-			`INSERT INTO authors (name,surname,avatar) VALUES('${name}', '${surname}', '${avatar}') RETURNING *`
-		)
-		res.send(dbResponse)
-	} catch (error) {
-		res.status(500).send({ error: error.message })
-	}
-})
-
-route.delete("/:id", async (req, res, next) => {
-	try {
-		const dbResponse = await query(
-			`DELETE FROM authors WHERE id=${req.params.id}`
-		)
-		res.send(dbResponse)
-	} catch (error) {
-		res.status(500).send({ error })
-	}
-})
-
-export default route
+module.exports = router
