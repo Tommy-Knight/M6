@@ -1,33 +1,31 @@
-import express from "express"
-import createError from "http-errors"
-import BlogModel from "./schema.js"
+import express from "express";
+import createError from "http-errors";
+import BlogModel from "./schema.js";
 
-const blogsRouter = express.Router()
+const blogsRouter = express.Router();
 
 blogsRouter.get("/", async (req, res, next) => {
 	try {
 		const blogs = await BlogModel.find({}).populate({
 			path: "author",
 			select: "name surname avatar",
-		})
-		res.send(blogs)
+		});
+		res.send(blogs);
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while getting blogs"))
+		console.log(error);
+		next(createError(500, "An error occurred while getting blogs"));
 	}
-})
+});
 
 blogsRouter.get("/:id", async (req, res, next) => {
 	try {
-		const blog = await blogModel.findBlog(req.params.id)
+		const blog = await blogModel.findBlog(req.params.id);
 
-		blog
-			? res.send(blog)
-			: next(createError(404, `Blog ${req.params.id} not found`))
+		blog ? res.send(blog) : next(createError(404, `Blog ${req.params.id} not found`));
 	} catch (error) {
-		next(error)
+		next(error);
 	}
-})
+});
 //  <><><><> PREVIOUS CODE BEFORE USING FINDBLOG FROM SCHEMA <><><><>
 // 	try {
 // 		const id = req.params.id
@@ -45,67 +43,67 @@ blogsRouter.get("/:id", async (req, res, next) => {
 
 blogsRouter.post("/", async (req, res, next) => {
 	try {
-		const newblog = new BlogModel(req.body)
-		const { _id } = await newblog.save()
+		const newblog = new BlogModel(req.body);
+		const { _id } = await newblog.save();
 
-		res.status(201).send(_id)
+		res.status(201).send(_id);
 	} catch (error) {
-		console.log(error)
+		console.log(error);
 		if (error.name === "ValidationError") {
-			next(createError(400, error))
+			next(createError(400, error));
 		} else {
-			next(createError(500, "An error occurred while saving blog"))
+			next(createError(500, "An error occurred while saving blog"));
 		}
 	}
-})
+});
 
 blogsRouter.put("/:id", async (req, res, next) => {
 	try {
 		const blog = await BlogModel.findByIdAndUpdate(req.params.id, req.body, {
 			runValidators: true,
 			new: true,
-		})
+		});
 		if (blog) {
-			res.send(blog)
+			res.send(blog);
 		} else {
-			next(createError(404, `Blog ${req.params.id} not found`))
+			next(createError(404, `Blog ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while modifying blog"))
+		console.log(error);
+		next(createError(500, "An error occurred while modifying blog"));
 	}
-})
+});
 
 blogsRouter.delete("/:id", async (req, res, next) => {
 	try {
-		const blog = await BlogModel.findByIdAndDelete(req.params.id)
+		const blog = await BlogModel.findByIdAndDelete(req.params.id);
 		if (blog) {
-			res.status(204).send()
+			res.status(204).send();
 		} else {
-			next(createError(404, `Student ${req.params.id} not found`))
+			next(createError(404, `Student ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while deleting student"))
+		console.log(error);
+		next(createError(500, "An error occurred while deleting student"));
 	}
-})
+});
 
 blogsRouter.get("/:id/comments/", async (req, res, next) => {
 	try {
 		const blogPost = await BlogModel.findById(req.params.id, {
 			comments: 1,
 			_id: 0,
-		})
+		});
 		if (blogPost) {
-			res.send(blogPost.comments)
+			res.send(blogPost.comments);
 		} else {
-			next(createError(404, `Blog with id: ${req.params.id} not found`))
+			next(createError(404, `Blog with id: ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error while getting comments"))
+		console.log(error);
+		next(createError(500, "An error while getting comments"));
 	}
-})
+});
 
 blogsRouter.get("/:id/comments/:commentId", async (req, res, next) => {
 	try {
@@ -118,32 +116,27 @@ blogsRouter.get("/:id/comments/:commentId", async (req, res, next) => {
 					$elemMatch: { _id: req.params.commentId },
 				},
 			}
-		)
+		);
 		if (blogPost) {
-			const { comments } = blogPost
+			const { comments } = blogPost;
 			if (comments && comments.length > 0) {
-				res.send(comments[0])
+				res.send(comments[0]);
 			} else {
-				next(
-					createError(
-						404,
-						`Comment with id: ${req.params.commentId} not found in this blog`
-					)
-				)
+				next(createError(404, `Comment with id: ${req.params.commentId} not found in this blog`));
 			}
 		} else {
-			next(createError(404, `Blog with id: ${req.params.id} not found`))
+			next(createError(404, `Blog with id: ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error while looking for comments"))
+		console.log(error);
+		next(createError(500, "An error while looking for comments"));
 	}
-})
+});
 
 blogsRouter.post("/:id/comments/", async (req, res, next) => {
 	try {
-		const comment = req.body
-		const commentToInsert = { ...comment, date: new Date() }
+		const comment = req.body;
+		const commentToInsert = { ...comment, date: new Date() };
 		const updatePost = await BlogModel.findByIdAndUpdate(
 			req.params.id,
 			{
@@ -152,17 +145,17 @@ blogsRouter.post("/:id/comments/", async (req, res, next) => {
 				},
 			},
 			{ runValidators: true, new: true }
-		)
+		);
 		if (updatePost) {
-			res.send(updatePost)
+			res.send(updatePost);
 		} else {
-			next(createError(404, `Post with id ${req.params.id} not found`))
+			next(createError(404, `Post with id ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error while posting update"))
+		console.log(error);
+		next(createError(500, "An error while posting update"));
 	}
-})
+});
 
 blogsRouter.put("/:id/comments/:commentId", async (req, res, next) => {
 	try {
@@ -176,17 +169,17 @@ blogsRouter.put("/:id/comments/:commentId", async (req, res, next) => {
 				runValidators: true,
 				new: true,
 			}
-		)
+		);
 		if (blogPost) {
-			res.send(blogPost)
+			res.send(blogPost);
 		} else {
-			next(createError(404, `Blog with id:${req.params.id} not found`))
+			next(createError(404, `Blog with id:${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error while updating comments"))
+		console.log(error);
+		next(createError(500, "An error while updating comments"));
 	}
-})
+});
 blogsRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
 	try {
 		const blogPost = await BlogModel.findByIdAndUpdate(
@@ -199,16 +192,16 @@ blogsRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
 			{
 				new: true,
 			}
-		)
+		);
 		if (blogPost) {
-			res.send(blogPost)
+			res.send(blogPost);
 		} else {
-			next(createError(404, `Blog with id: ${req.params.id} not found`))
+			next(createError(404, `Blog with id: ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error while deleting comment"))
+		console.log(error);
+		next(createError(500, "An error while deleting comment"));
 	}
-})
+});
 
-export default blogsRouter
+export default blogsRouter;

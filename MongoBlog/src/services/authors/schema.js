@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import createError from "http-errors"
+import mongoose from "mongoose";
+import createError from "http-errors";
 
-const { Schema, model } = mongoose
+const { Schema, model } = mongoose;
 
 const AuthorsSchema = new Schema(
 	{
@@ -11,21 +11,21 @@ const AuthorsSchema = new Schema(
 		avatar: { type: String },
 	},
 	{ timestamps: true }
-)
+);
 
 AuthorsSchema.post("validate", (error, doc, next) => {
 	if (error) {
-		const err = createError(400, error)
-		next(err)
+		const err = createError(400, error);
+		next(err);
 	} else {
-		next()
+		next();
 	}
-})
+});
 
 AuthorsSchema.static("getAuthors", async function (id) {
-	const blog = await this.findOne({ _id: id }).populate("comments")
-	console.log(blog)
-	return blog
-})
+	const blog = await this.findOne({ _id: id }).populate("comments");
+	console.log(blog);
+	return blog;
+});
 
-export default new model("Author", AuthorsSchema)
+export default new model("Author", AuthorsSchema);

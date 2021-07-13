@@ -1,57 +1,54 @@
-import express from "express"
-import createError from "http-errors"
-import multer from "multer"
-import getAuthors from "./schema.js"
+import express from "express";
+import createError from "http-errors";
+import multer from "multer";
+import getAuthors from "./schema.js";
+import { basicAuthMiddleware } from "../../auth/author.js";
 
-const authorsRouter = express.Router()
+const authorsRouter = express.Router();
 
 authorsRouter.get("/", async (req, res, next) => {
 	try {
-		const authors = await getAuthors.find({})
-		res.send(authors)
+		const authors = await getAuthors.find({});
+		res.send(authors);
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while getting authors"))
+		console.log(error);
+		next(createError(500, "An error occurred while getting authors"));
 	}
-})
+});
 
 authorsRouter.get("/:id", async (req, res, next) => {
 	try {
-		const author = await blogModel.getAuthors(req.params.id)
+		const author = await blogModel.getAuthors(req.params.id);
 
-		author
-			? res.send(author)
-			: next(createError(404, `Author ${req.params.id} not found`))
+		author ? res.send(author) : next(createError(404, `Author ${req.params.id} not found`));
 	} catch (error) {
-		next(error)
+		next(error);
 	}
-})
+});
 
 authorsRouter.post("/", async (req, res, next) => {
 	try {
-		const newauthor = new getAuthors(req.body)
-		const { _id } = await newauthor.save()
-		console.log(newauthor)
-		res.status(201).send(_id)
+		const newauthor = new getAuthors(req.body);
+		const { _id } = await newauthor.save();
+		console.log(newauthor);
+		res.status(201).send(_id);
 	} catch (error) {
-		console.log(error)
+		console.log(error);
 		if (error.name === "ValidationError") {
-			next(createError(400, error))
+			next(createError(400, error));
 		} else {
-			next(createError(500, "An error occurred while saving blog"))
+			next(createError(500, "An error occurred while saving blog"));
 		}
 	}
-})
+});
 
 authorsRouter.put("/:id", async (req, res) => {
-	const authors = await getAuthors()
-	const newAuthorsArray = authors.filter(
-		(author) => author._id !== req.params.id
-	)
-	const author = authors.find((author) => author._id === req.params.id)
+	const authors = await getAuthors();
+	const newAuthorsArray = authors.filter((author) => author._id !== req.params.id);
+	const author = authors.find((author) => author._id === req.params.id);
 
 	if (!author) {
-		next(createError(400, "id does not match"))
+		next(createError(400, "id does not match"));
 	}
 
 	const updatedAuthor = {
@@ -59,63 +56,53 @@ authorsRouter.put("/:id", async (req, res) => {
 		createdOn: author.createdOn,
 		_id: author._id,
 		lastUpdatedOn: new Date(),
-	}
-	newAuthorsArray.push(updatedAuthor)
+	};
+	newAuthorsArray.push(updatedAuthor);
 
-	await writeAuthors(newAuthorsArray)
+	await writeAuthors(newAuthorsArray);
 
-	res.send(updatedAuthor)
-})
+	res.send(updatedAuthor);
+});
 
 authorsRouter.delete("/:id", async (req, res, next) => {
 	try {
-		const authors = await getAuthors.findByIdAndDelete(req.params.id)
+		const authors = await getAuthors.findByIdAndDelete(req.params.id);
 		if (authors) {
-			res.status(204).send()
+			res.status(204).send();
 		} else {
-			next(createError(404, `Author ${req.params.id} not found`))
+			next(createError(404, `Author ${req.params.id} not found`));
 		}
 	} catch (error) {
-		console.log(error)
-		next(createError(500, "An error occurred while deleting author"))
+		console.log(error);
+		next(createError(500, "An error occurred while deleting author"));
 	}
-})
+});
 
-authorsRouter.post(
-	"/:id/uploadAvatar",
-	multer().single("authorAvatar"),
-	async (req, res, next) => {
-		try {
-			console.log(req.file)
-			const authors = await getAuthors()
+authorsRouter.post("/:id/uploadAvatar", multer().single("authorAvatar"), async (req, res, next) => {
+	try {
+		console.log(req.file);
+		const authors = await getAuthors();
 
-			let author = authors.find((author) => author._id === req.params.id)
-			if (!author) {
-				next(createError(400, "id does not match"))
-			}
-
-			await writeAuthorAvatars(req.params.id + ".jpg", req.file.buffer)
-
-			author.avatar = `http://localhost:3001/images/authorAvatars/${req.params.id}.jpg`
-
-			const newAuthors = authors.filter(
-				(author) => author._id !== req.params.id
-			)
-			newAuthors.push(author)
-			await writeAuthors(newAuthors)
-
-			res.status(200).send("Image uploaded successfully")
-		} catch (error) {
-			next(error)
+		let author = authors.find((author) => author._id === req.params.id);
+		if (!author) {
+			next(createError(400, "id does not match"));
 		}
+
+		await writeAuthorAvatars(req.params.id + ".jpg", req.file.buffer);
+
+		author.avatar = `http://localhost:3001/images/authorAvatars/${req.params.id}.jpg`;
+
+		const newAuthors = authors.filter((author) => author._id !== req.params.id);
+		newAuthors.push(author);
+		await writeAuthors(newAuthors);
+
+		res.status(200).send("Image uploaded successfully");
+	} catch (error) {
+		next(error);
 	}
-)
+});
 
-export default authorsRouter
-
-
-
-
+export default authorsRouter;
 
 // authorsRouter.get("/exportCSV", async (req, res, next) => {
 // 	try {
