@@ -6,7 +6,7 @@ import { basicAuthMiddleware } from "../../auth/author.js";
 
 const authorsRouter = express.Router();
 
-authorsRouter.get("/", async (req, res, next) => {
+authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const authors = await getAuthors.find({});
 		res.send(authors);
@@ -16,7 +16,7 @@ authorsRouter.get("/", async (req, res, next) => {
 	}
 });
 
-authorsRouter.get("/:id", async (req, res, next) => {
+authorsRouter.get("/:id", basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const author = await blogModel.getAuthors(req.params.id);
 
@@ -26,7 +26,7 @@ authorsRouter.get("/:id", async (req, res, next) => {
 	}
 });
 
-authorsRouter.post("/", async (req, res, next) => {
+authorsRouter.post("/",basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const newauthor = new getAuthors(req.body);
 		const { _id } = await newauthor.save();
@@ -42,7 +42,7 @@ authorsRouter.post("/", async (req, res, next) => {
 	}
 });
 
-authorsRouter.put("/:id", async (req, res) => {
+authorsRouter.put("/:id",basicAuthMiddleware,  async (req, res) => {
 	const authors = await getAuthors();
 	const newAuthorsArray = authors.filter((author) => author._id !== req.params.id);
 	const author = authors.find((author) => author._id === req.params.id);
@@ -64,7 +64,7 @@ authorsRouter.put("/:id", async (req, res) => {
 	res.send(updatedAuthor);
 });
 
-authorsRouter.delete("/:id", async (req, res, next) => {
+authorsRouter.delete("/:id",basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const authors = await getAuthors.findByIdAndDelete(req.params.id);
 		if (authors) {
@@ -78,7 +78,7 @@ authorsRouter.delete("/:id", async (req, res, next) => {
 	}
 });
 
-authorsRouter.post("/:id/uploadAvatar", multer().single("authorAvatar"), async (req, res, next) => {
+authorsRouter.post("/:id/uploadAvatar",basicAuthMiddleware, multer().single("authorAvatar"), async (req, res, next) => {
 	try {
 		console.log(req.file);
 		const authors = await getAuthors();
@@ -103,21 +103,3 @@ authorsRouter.post("/:id/uploadAvatar", multer().single("authorAvatar"), async (
 });
 
 export default authorsRouter;
-
-// authorsRouter.get("/exportCSV", async (req, res, next) => {
-// 	try {
-// 		const source = await authorsReadStream()
-
-// 		const fields = ["name", "surname", "email"]
-// 		const opts = { fields }
-// 		const json2csv = new Transform(opts)
-
-// 		res.setHeader("Content-Disposition", `attachment; filename=authors.csv`)
-
-// 		pipeline(source, json2csv, res, (error) => {
-// 			if (error) next(error)
-// 		})
-// 	} catch (error) {
-// 		next(error)
-// 	}
-// })
