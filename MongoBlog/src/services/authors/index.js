@@ -2,9 +2,20 @@ import express from "express";
 import createError from "http-errors";
 import multer from "multer";
 import getAuthors from "./schema.js";
+import AuthorModel from "./schema.js";
 import { basicAuthMiddleware } from "../../auth/author.js";
 
 const authorsRouter = express.Router();
+
+authorsRouter.post("/register", async (req, res, next) => {
+	try {
+		const newAuthor = new AuthorModel(req.body);
+		const { _id } = await newAuthor.save();
+		res.status(201).send({ _id });
+	} catch (error) {
+		next(error);
+	}
+});
 
 authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
 	try {
@@ -26,7 +37,7 @@ authorsRouter.get("/:id", basicAuthMiddleware, async (req, res, next) => {
 	}
 });
 
-authorsRouter.post("/",basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const newauthor = new getAuthors(req.body);
 		const { _id } = await newauthor.save();
@@ -42,7 +53,7 @@ authorsRouter.post("/",basicAuthMiddleware, async (req, res, next) => {
 	}
 });
 
-authorsRouter.put("/:id",basicAuthMiddleware,  async (req, res) => {
+authorsRouter.put("/:id", basicAuthMiddleware, async (req, res) => {
 	const authors = await getAuthors();
 	const newAuthorsArray = authors.filter((author) => author._id !== req.params.id);
 	const author = authors.find((author) => author._id === req.params.id);
@@ -64,7 +75,7 @@ authorsRouter.put("/:id",basicAuthMiddleware,  async (req, res) => {
 	res.send(updatedAuthor);
 });
 
-authorsRouter.delete("/:id",basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.delete("/:id", basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const authors = await getAuthors.findByIdAndDelete(req.params.id);
 		if (authors) {
@@ -78,28 +89,33 @@ authorsRouter.delete("/:id",basicAuthMiddleware, async (req, res, next) => {
 	}
 });
 
-authorsRouter.post("/:id/uploadAvatar",basicAuthMiddleware, multer().single("authorAvatar"), async (req, res, next) => {
-	try {
-		console.log(req.file);
-		const authors = await getAuthors();
+authorsRouter.post(
+	"/:id/uploadAvatar",
+	basicAuthMiddleware,
+	multer().single("authorAvatar"),
+	async (req, res, next) => {
+		try {
+			console.log(req.file);
+			const authors = await getAuthors();
 
-		let author = authors.find((author) => author._id === req.params.id);
-		if (!author) {
-			next(createError(400, "id does not match"));
+			let author = authors.find((author) => author._id === req.params.id);
+			if (!author) {
+				next(createError(400, "id does not match"));
+			}
+
+			await writeAuthorAvatars(req.params.id + ".jpg", req.file.buffer);
+
+			author.avatar = `http://localhost:3001/images/authorAvatars/${req.params.id}.jpg`;
+
+			const newAuthors = authors.filter((author) => author._id !== req.params.id);
+			newAuthors.push(author);
+			await writeAuthors(newAuthors);
+
+			res.status(200).send("Image uploaded successfully");
+		} catch (error) {
+			next(error);
 		}
-
-		await writeAuthorAvatars(req.params.id + ".jpg", req.file.buffer);
-
-		author.avatar = `http://localhost:3001/images/authorAvatars/${req.params.id}.jpg`;
-
-		const newAuthors = authors.filter((author) => author._id !== req.params.id);
-		newAuthors.push(author);
-		await writeAuthors(newAuthors);
-
-		res.status(200).send("Image uploaded successfully");
-	} catch (error) {
-		next(error);
 	}
-});
+);
 
 export default authorsRouter;

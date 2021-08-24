@@ -8,6 +8,7 @@ const AuthorsSchema = new Schema(
 		name: { type: String, required: true },
 		surname: { type: String, required: true },
 		email: { type: String, required: true },
+		password: {type: String, required: true},
 		avatar: { type: String },
 	},
 	{ timestamps: true }
@@ -28,4 +29,4 @@ AuthorsSchema.static("getAuthors", async function (id) {
 	return blog;
 });
 
-export default new model("Author", AuthorsSchema);
+export default new model("AuthorModel", AuthorsSchema);
