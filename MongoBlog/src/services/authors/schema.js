@@ -10,6 +10,7 @@ const AuthorsSchema = new Schema(
 		surname: { type: String, required: true },
 		email: { type: String, required: true },
 		password: { type: String, required: true },
+		roles: {type: String, required: true, enum: ["Admin", "User"], default: "User", },
 		avatar: { type: String },
 	},
 	{ timestamps: true }
@@ -29,18 +30,20 @@ AuthorsSchema.pre("save", async function (next) {
 //<><><><>< HANDLES THE JSON RETURN <><><><><
 
 AuthorsSchema.methods.toJSON = function () {
-	const userDocument = this;
-	const userObject = userDocument.toObject();
-	delete userObject.password;
-	delete userObject.__v;
-	return userObject;
+	const authorDocument = this;
+	const authorObject = authorDocument.toObject();
+	delete authorObject.password;
+	delete authorObject.__v;
+	return authorObject;
 };
 
+//<><><><>< COMPARE PASSWORDS <><><><><
+
 AuthorsSchema.statics.checkCredentials = async function (email, plainPW) {
-	const user = await this.findOne({ email });
-	if (user) {
-		const isMatch = await bcrypt.compare(plainPW, user.password);
-		if (isMatch) return user;
+	const author = await this.findOne({ email });
+	if (author) {
+		const isMatch = await bcrypt.compare(plainPW, author.password);
+		if (isMatch) return author;
 		else return null;
 	} else {
 		return null;
@@ -55,6 +58,7 @@ AuthorsSchema.post("validate", (error, doc, next) => {
 		next();
 	}
 });
+
 //<><><><>< MONGOOSE GETAUTHORS <><><><><
 
 AuthorsSchema.static("getAuthors", async function (id) {

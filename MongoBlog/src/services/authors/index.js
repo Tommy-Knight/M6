@@ -4,6 +4,7 @@ import multer from "multer";
 import getAuthors from "./schema.js";
 import AuthorModel from "./schema.js";
 import { basicAuthMiddleware } from "../../auth/author.js";
+import {adminOnly} from "../../auth/admin.js";
 
 const authorsRouter = express.Router();
 
@@ -27,11 +28,39 @@ authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
 	}
 });
 
+authorsRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
+	try {
+		res.send(req.author);
+	} catch (error) {
+		console.log(error);
+		next(createError(500, "An error occurred while finding you"));
+	}
+});
+
 authorsRouter.get("/:id", basicAuthMiddleware, async (req, res, next) => {
 	try {
 		const author = await blogModel.getAuthors(req.params.id);
 
 		author ? res.send(author) : next(createError(404, `Author ${req.params.id} not found`));
+	} catch (error) {
+		next(error);
+	}
+});
+
+authorsRouter.delete("/me", basicAuthMiddleware, async (req, res, next) => {
+	try {
+		await req.author.deleteOne();
+		//await AuthorModel.findByIdAndDelete(req.author._id)
+	} catch (error) {
+		next(error);
+	}
+});
+
+authorsRouter.post("/me", basicAuthMiddleware, async (req, res, next) => {
+	try {
+		req.author.name = "hardcoded"; // usually modify req.author with fields from req.body
+		await req.author.save();
+		res.send(req.author);
 	} catch (error) {
 		next(error);
 	}
@@ -75,7 +104,7 @@ authorsRouter.put("/:id", basicAuthMiddleware, async (req, res) => {
 	res.send(updatedAuthor);
 });
 
-authorsRouter.delete("/:id", basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.delete("/:id", basicAuthMiddleware, adminOnly, async (req, res, next) => {
 	try {
 		const authors = await getAuthors.findByIdAndDelete(req.params.id);
 		if (authors) {
