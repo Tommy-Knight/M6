@@ -26,7 +26,7 @@ const BlogSchema = new Schema(
 			required: true,
 		},
 		comments: { type: [CommentSchema], default: [] },
-		author: { type: Schema.Types.ObjectId, ref: "Author", default: {} },
+		author: { type: Schema.Types.ObjectId, ref: "AuthorModel", default: {} },
 	},
 	{ timestamps: true }
 );
