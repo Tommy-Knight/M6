@@ -15,8 +15,8 @@ const AuthorsSchema = new Schema(
 	{ timestamps: true }
 );
 
-
 //<><><><>< HASH THE PASSWORDS <><><><><
+
 AuthorsSchema.pre("save", async function (next) {
 	const newUser = this;
 	const plainPW = newUser.password;
@@ -55,7 +55,7 @@ AuthorsSchema.post("validate", (error, doc, next) => {
 		next();
 	}
 });
-//<><><><>< MONGOOSE  <><><><><
+//<><><><>< MONGOOSE GETAUTHORS <><><><><
 
 AuthorsSchema.static("getAuthors", async function (id) {
 	const blog = await this.findOne({ _id: id }).populate("comments");

@@ -23,13 +23,13 @@ server.use(cors());
 server.use("/blogs", blogsRouter);
 server.use("/authors", authorsRouter);
 
+console.table(listEndpoints(server));
+
 // ><><><><: ERROR MIDDLEWARES :><><><>< \\
 
 server.use(badRequestErrorHandler);
 server.use(notFoundErrorHandler);
 server.use(catchAllErrorHandler);
-
-console.table(listEndpoints(server));
 
 // ><><><><: MONGO TIME :><><><>< \\
 
@@ -40,8 +40,7 @@ mongoose.connect(process.env.MONGO_CONNECTION, {
 
 const db = mongoose.connection;
 db.on("error", (error) => console.log(error));
-db.once("open", () => console.log("Connected to MongoDB 🌵"))
-.then(
+db.once("open", () => console.log("Connected to MongoDB 🌵")).then(
 	server.listen(port, () => {
 		console.log("Running on port", port, "🎇");
 	})
