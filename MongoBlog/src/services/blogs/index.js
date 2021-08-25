@@ -6,10 +6,7 @@ const blogsRouter = express.Router();
 
 blogsRouter.get("/", async (req, res, next) => {
 	try {
-		const blogs = await BlogModel.find({}).populate({
-			path: "author",
-			select: "name surname avatar",
-		});
+		const blogs = await BlogModel.find({}).populate("author");
 		res.send(blogs);
 	} catch (error) {
 		console.log(error);
@@ -18,14 +15,26 @@ blogsRouter.get("/", async (req, res, next) => {
 });
 
 blogsRouter.get("/:id", async (req, res, next) => {
-	try {
-		const blog = await blogModel.findBlog(req.params.id);
-
-		blog ? res.send(blog) : next(createError(404, `Blog ${req.params.id} not found`));
-	} catch (error) {
-		next(error);
-	}
+	// try {
+	// 	const blog = await blogModel.findBlog(req.params.id);
+	// 	blog ? res.send(blog) : next(createError(404, `Blog ${req.params.id} not found`));
+	// } catch (error) {
+	// 	next(error);
+	// }
+		try {
+			const id = req.params.id
+			const blog = await BlogModel.findById(id).populate("author");
+			if (blog) {
+				res.send(blog)
+			} else {
+				next(createError(404, `Blog ${req.params.id} not found`))
+			}
+		} catch (error) {
+			console.log(error)
+			next(createError(500, "An error occurred while getting blog"))
+		}
 });
+
 //  <><><><> PREVIOUS CODE BEFORE USING FINDBLOG FROM SCHEMA <><><><>
 // 	try {
 // 		const id = req.params.id

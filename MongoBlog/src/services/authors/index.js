@@ -1,12 +1,16 @@
-import express from "express";
-import createError from "http-errors";
-import multer from "multer";
-import getAuthors from "./schema.js";
+import { JWTAuthMiddleware, basicAuthMiddleware } from "../../auth/author.js";
+
 import AuthorModel from "./schema.js";
-import { basicAuthMiddleware } from "../../auth/author.js";
-import {adminOnly} from "../../auth/admin.js";
+import { JWTAuthenticate } from "../../auth/tools.js";
+import { adminOnly } from "../../auth/admin.js";
+import createError from "http-errors";
+import express from "express";
+import getAuthors from "./schema.js";
+import multer from "multer";
 
 const authorsRouter = express.Router();
+
+//><><><><> CREATES NEW AUTHOR, RETURNS ID <><><><><\\
 
 authorsRouter.post("/register", async (req, res, next) => {
 	try {
@@ -18,7 +22,26 @@ authorsRouter.post("/register", async (req, res, next) => {
 	}
 });
 
-authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
+//><><><><> CHECKS CREDENTIALS, RETURNS NEW ACCESS TOKEN <><><><><\\
+
+authorsRouter.post("/login", async (req, res, next) => {
+	try {
+		const { email, password } = req.body;
+		const author = await AuthorModel.checkCredentials(email, password);
+		if (author) {
+			const accessToken = await JWTAuthenticate(author);
+			res.send({ accessToken });
+		} else {
+			next(createError(401, "Credentials not valid!"));
+		}
+	} catch (error) {
+		next(error);
+	}
+});
+
+//><><><><> REQUIRES ACCESS TOKEN <><><><><\\
+
+authorsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
 	try {
 		const authors = await getAuthors.find({});
 		res.send(authors);
@@ -27,6 +50,8 @@ authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
 		next(createError(500, "An error occurred while getting authors"));
 	}
 });
+
+//><><><><> REQUIRES BASIC AUTH <><><><><\\
 
 authorsRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
 	try {
@@ -39,7 +64,7 @@ authorsRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
 
 authorsRouter.get("/:id", basicAuthMiddleware, async (req, res, next) => {
 	try {
-		const author = await blogModel.getAuthors(req.params.id);
+		const author = await AuthorModel.getAuthors(req.params.id);
 
 		author ? res.send(author) : next(createError(404, `Author ${req.params.id} not found`));
 	} catch (error) {

@@ -15,6 +15,6 @@ export const badRequestErrorHandler = (err, req, res, next) => {
 };
 
 export const catchAllErrorHandler = (err, req, res, next) => {
-	res.status(err.status).send(err.message || "Generic Server Error");
+	res.status(err.status || 500).send(err.message || "Generic Server Error");
 	console.log(err)
 };

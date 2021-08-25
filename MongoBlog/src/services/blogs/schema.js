@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import AuthorsSchema from "../authors/schema.js";
+import AuthorModel from "../authors/schema.js";
 
 const { Schema, model } = mongoose;
 
@@ -26,7 +26,7 @@ const BlogSchema = new Schema(
 			required: true,
 		},
 		comments: { type: [CommentSchema], default: [] },
-		author: { type: Schema.Types.ObjectId, ref: "AuthorModel", default: {} },
+		author: { type: Schema.Types.ObjectId, ref: "AuthorModel" },
 	},
 	{ timestamps: true }
 );
@@ -46,7 +46,7 @@ export default model("Blog", BlogSchema);
 
 BlogSchema.pre("save", async function (done) {
 	try {
-		const isExist = await AuthorsSchema.findById(this.author);
+		const isExist = await AuthorModel.findById(this.author);
 		if (isExist) {
 			done();
 		} else {

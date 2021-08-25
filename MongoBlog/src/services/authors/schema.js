@@ -1,16 +1,16 @@
-import mongoose from "mongoose";
-import createError from "http-errors";
 import bcrypt from "bcrypt";
+import createError from "http-errors";
+import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
 const AuthorsSchema = new Schema(
 	{
-		name: { type: String, required: true },
-		surname: { type: String, required: true },
+		name: { type: String, required: true, default: "User" },
+		surname: { type: String, required: true, default: "Surname" },
 		email: { type: String, required: true },
 		password: { type: String, required: true },
-		roles: {type: String, required: true, enum: ["Admin", "User"], default: "User", },
+		roles: { type: String, required: true, enum: ["Admin", "User"], default: "User" },
 		avatar: { type: String },
 	},
 	{ timestamps: true }
@@ -43,21 +43,13 @@ AuthorsSchema.statics.checkCredentials = async function (email, plainPW) {
 	const author = await this.findOne({ email });
 	if (author) {
 		const isMatch = await bcrypt.compare(plainPW, author.password);
-		if (isMatch) return author;
-		else return null;
+		return isMatch ? author : null;
+		// if (isMatch) return author;
+		// else return null;
 	} else {
 		return null;
 	}
 };
-
-AuthorsSchema.post("validate", (error, doc, next) => {
-	if (error) {
-		const err = createError(400, error);
-		next(err);
-	} else {
-		next();
-	}
-});
 
 //<><><><>< MONGOOSE GETAUTHORS <><><><><
 
